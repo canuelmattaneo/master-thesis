@@ -1,0 +1,40 @@
+
+d = table2array(readtable("tree.csv"));
+d = d(1:end-1);
+g = table2array(readtable("water.csv"));
+g = g-mean(g) + randn(90900,1);
+
+d = d/max(d+g);
+g = g/max(d+g);
+
+v1 = filter(1, [1 +0.9], g);
+v2 = filter(1, [1 -0.9 0.5], g);
+x = d+v1;
+
+P=20;
+mu = 1e-10;
+w = zeros(P+1,1);
+e = zeros(size(x));
+y = zeros(size(x));
+
+for n=P+1:size(d)
+    v2_win = v2(n:-1:n-P);
+    y(n) = w'*v2_win;
+    e(n) = x(n)-y(n);
+    w = w + mu*e(n)*v2_win;
+end
+
+subplot(221)
+plot([v2 v1 g])
+legend({'v_2[n]','v_1[n]', 'water[n]'})
+
+subplot(222)
+plot([d x])
+legend({'tree[n]', 'tree[n]+v_1[n]'})
+
+subplot(223)
+yyaxis left
+plot(y)
+yyaxis right
+plot(g)
+legend({'V_2(z) H_w(z)','real water[n]'})
